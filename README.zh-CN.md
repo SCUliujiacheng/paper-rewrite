@@ -6,7 +6,7 @@
 
 写论文时，有些段落意思并不复杂，生成出来却绕了好几句。直接让模型重写，又容易把“可能”改成“证明”，或者顺手改掉一个数字。改稿台把这两件事放在一起：本地模型逐段改写，旁边保留原文、被拒绝的候选和检查记录。
 
-[发布下载](https://github.com/SCUliujiacheng/paper-rewrite-zh/releases) · [启动说明](docs/downloads.md) · [安装模型](docs/model-setup.md) · [检测结果说明](docs/detectors.md) · [测试与限制](docs/evaluation.md) · [English](README.en.md)
+[发布下载](https://github.com/SCUliujiacheng/paper-rewrite-zh/releases) · [启动说明](docs/downloads.md) · [安装模型](docs/model-setup.md) · [检测结果说明](docs/detectors.md) · [测试与限制](docs/evaluation.md) · [English](README.md)
 
 ## 可以做什么
 

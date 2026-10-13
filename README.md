@@ -6,7 +6,7 @@ This is an experimental preview. The workbench and local inference run end to en
 
 Rewriting a paragraph should not quietly change a measurement or turn a tentative conclusion into a firm claim. This project keeps the source next to the revision, checks concrete details, and shows rejected candidates instead of hiding them.
 
-[Releases](https://github.com/SCUliujiacheng/paper-rewrite/releases) · [Start locally](docs/downloads.md) · [Model setup](docs/model-setup.en.md) · [Detector reports](docs/detectors.md) · [Evaluation and limits](docs/evaluation.md#english-summary) · [中文](README.md)
+[Releases](https://github.com/SCUliujiacheng/paper-rewrite/releases) · [Start locally](docs/downloads.md) · [Model setup](docs/model-setup.en.md) · [Detector reports](docs/detectors.md) · [Evaluation and limits](docs/evaluation.md#english-summary) · [中文](README.zh-CN.md)
 
 ## What it does
 
