@@ -1,0 +1,283 @@
+{
+  "measured_at": "2026-10-13T15:00:39.202077+00:00",
+  "scope": "development_prompt_probe_not_benchmark",
+  "instruction": "Rewrite the academic paragraph below in its original language. Improve clarity and vary sentence structure, while preserving every claim and its scope. Keep all numbers, units, names, quotations, citation markers and formulas exactly unchanged. Preserve negation, comparisons, limitations and degrees of uncertainty. Do not remove hedging that carries scientific meaning, infer causes, add facts, or use slang. Return only the revised paragraph, without explanations.",
+  "prompt_instruction_sha256": "274e7ad628e24c787fc39f12f10b64e98292701d3d2c65d16ad06802bec46a8e",
+  "model_file": "humanizer-12b-IQ2_XS-QAT.gguf",
+  "runtime": "llama.cpp b11583; ctx4096; b128; ub64; ngl99",
+  "detector_evaluation": "not_run",
+  "cases": [
+    {
+      "id": "zh-01",
+      "source": "在本项目虚构的蓝盒协议实验中，我们将24枚木片随机放入两个容器，并在20 ℃下记录其滚动时间。甲组均值为12.5 s，乙组为15.0 s；这些数值仅用于软件测试。按照占位引文[1]定义的计时步骤，结果不支持甲组在所有温度下都更快。由于没有进行高温测试，当前结论只适用于该玩具装置，不能推及真实材料的性能。",
+      "attempts": [
+        {
+          "seed": 42,
+          "output": "我们虚构了蓝盒协议实验，即随机放置24张木片在两个容器中，计算20 ℃下，滚动的时间。甲组算出来的平均值是12.5 s，乙组是15.0 s。此结果仅为软件测得结果。这并不是因为甲组在所有温度下都比乙组更快，符合占位引用[1]所说的计时方法。我们不做高温实验，所以这个结论仅适用于这个玩具，无法直接反映实际材料的属性。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": false,
+            "issues": [
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"不能\": 1, \"没有\": 1}",
+                "after": "{\"不\": 2, \"无法\": 1}"
+              }
+            ],
+            "requires_review": true
+          }
+        },
+        {
+          "seed": 43,
+          "output": "本项目虚构的蓝盒协议实验。我们随机将24片木片放入两个容器中，测试其在20 ℃时的滚动时间。得到甲组12.5s，乙组15.0s (纯粹是为了测试软件而得到的数字). 参照占位引文[1]的测试方式，也就是计时的方法。我们没有获得甲组在所有温度均更快的结论。这里没有进行高温的测试，因此目前只能适用于这个玩具装置，对真实材料的性能不能延伸。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": false,
+            "issues": [
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"不能\": 1, \"没有\": 1}",
+                "after": "{\"不能\": 1, \"没有\": 2}"
+              }
+            ],
+            "requires_review": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "zh-02",
+      "source": "本段描述原创的虚构方格计数器研究。我们设置三个纸面棋盘，每个棋盘包含八行标记，计数规则记为$S=\\sum_{i=1}^{8}x_i$。模拟结果显示，方案A识别18个标记，方案B识别16个标记[2]。这并不意味着A能减少错误，因为误报次数尚未统计。样本范围仅包括黑白格；彩色格与旋转格被排除，因此比较必须保留这一适用条件。",
+      "attempts": [
+        {
+          "seed": 42,
+          "output": "下面的段落介绍了原创的虚构方格计数器的例子。 有3个纸面棋盘，里面有8个标记.计数的方法如下：$S=\\sum_{i=1}^{8}x_i$ 模拟结果为方案A检测出18个，方案B检测出16个标记[2].这并不代表A减少了错误数，毕竟没统计误报的次数。样本只是黑白格。没有彩色格，没有旋转格，所以对比需要这个前提条件。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "numbers",
+                "severity": "error",
+                "before": "{\"1\": 1, \"16个\": 1, \"18个\": 1, \"2\": 1, \"8\": 1, \"三个\": 1}",
+                "after": "{\"1\": 1, \"16个\": 1, \"18个\": 1, \"2\": 1, \"3个\": 1, \"8\": 1, \"8个\": 1}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"未\": 1}",
+                "after": "{\"不\": 1, \"没有\": 2}"
+              }
+            ],
+            "requires_review": true
+          }
+        },
+        {
+          "seed": 43,
+          "output": "这部分是原创虚构的方格计数器研究。\n我们用了三个纸面棋盘，每一张都有8行标记，计数方法是：$S=\\sum_{i=1}^{8}x_i$\n\n模拟结果，A方案识别18个标记，B方案识别16个标记[2].\n这时候不等于说A少出错，还不知道误报几下。这里样本都是黑白格，漏了彩色格和旋转格，所以对比就得在里面。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "numbers",
+                "severity": "error",
+                "before": "{\"1\": 1, \"16个\": 1, \"18个\": 1, \"2\": 1, \"8\": 1, \"三个\": 1}",
+                "after": "{\"1\": 1, \"16个\": 1, \"18个\": 1, \"2\": 1, \"8\": 2, \"三个\": 1}"
+              },
+              {
+                "code": "comparisons",
+                "severity": "error",
+                "before": "{}",
+                "after": "{\"等于\": 1}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"未\": 1}",
+                "after": "{\"不\": 2}"
+              }
+            ],
+            "requires_review": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "zh-03",
+      "source": "为测试改写后的条件范围，我们构造了不存在于真实文献中的雾灯指标。玩具模拟采用10 Hz采样，并分别生成0.2 m和0.4 m的虚拟路径；全部数据均为人为设定。只有当噪声小于0.03时，指标才保持稳定，参见占位引文[3,4]。我们未观察到稳定性随路径长度单调增加的现象，因而不能写成“路径越长越可靠”，也不能删掉噪声阈值。",
+      "attempts": [
+        {
+          "seed": 42,
+          "output": "我们为了检验改写后的条件范围，特意设置了一些不存在真实文献的雾灯指标。玩具里面我们用10hz采样频率。生成0.2m和0.4m的虚拟路径。一切都是人为设置。唯有噪声小过0.03指标才能稳定，如下图（占位引文[3,4]).\n\n稳定性不能简单的说是随着路径长度单调递增，所以不能说路长了就越可靠，也不能把噪声门槛删掉。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "numbers",
+                "severity": "error",
+                "before": "{\"0.03\": 1, \"0.2m\": 1, \"0.4m\": 1, \"10Hz\": 1, \"3\": 1, \"4\": 1}",
+                "after": "{\"0.03\": 1, \"0.2m\": 1, \"0.4m\": 1, \"10\": 1, \"3\": 1, \"4\": 1}"
+              },
+              {
+                "code": "comparisons",
+                "severity": "error",
+                "before": "{\"小于\": 1}",
+                "after": "{}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"不能\": 2, \"未\": 1}",
+                "after": "{\"不\": 1, \"不能\": 3}"
+              }
+            ],
+            "requires_review": true
+          }
+        },
+        {
+          "seed": 43,
+          "output": "为了验证改写范围的有效性，我们设计了一个非真实的雾灯指标。我们通过玩具模拟实现10 Hz采样，我们创建了0.2 m 和 0.4 m的虚拟路径（人造的数据），只有噪声<0.03的时候该指标才会稳定(见占位文献[3,4])，我们没能发现可靠度随着路径长度的单调变化，无法表述为路径越长可靠度越好，也不可以去掉噪声阈值。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "numbers",
+                "severity": "error",
+                "before": "{\"0.03\": 1, \"0.2m\": 1, \"0.4m\": 1, \"10Hz\": 1, \"3\": 1, \"4\": 1}",
+                "after": "{\"0.03\": 1, \"0.2m\": 1, \"0.4m\": 1, \"10Hz\": 1, \"3\": 1, \"4\": 1, \"一个\": 1}"
+              },
+              {
+                "code": "comparisons",
+                "severity": "error",
+                "before": "{\"小于\": 1}",
+                "after": "{\"<\": 1}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"不能\": 2, \"未\": 1}",
+                "after": "{\"不\": 1, \"无法\": 1}"
+              }
+            ],
+            "requires_review": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "zh-08",
+      "source": "灰桥判据是本项目原创的虚构比较规则。我们为软件冒烟测试设定A值为4.8 mg、B值为6.2 mg，并明确规定$A<B$；这些数字不是实测数据。若只保留数字却将比较方向反转，结论仍会出错。根据占位引文[10]，该玩具判据只在室温且无额外载荷时使用。当前模拟提示A可能较轻，但没有证据证明A更耐用；耐用性与质量必须分开表述。",
+      "attempts": [
+        {
+          "seed": 42,
+          "output": "我们自己设计的灰桥判据，是虚构的比较规则（本项目的原创）。软件冒烟测试，我们设置A:4.8mg, B:6.2mg。并明文规定$A<B$。这个数字不是数据。如果只是保留了数字，但是把这个比较方向颠倒过来，结论还是会错的。从占位文献引用的[10]可知，这个玩具桥只有在室温，无其他载荷的条件下才能用。现在的模拟提示a可能偏轻，但是没有证据表明a比较耐用。不要把耐用性和质量混在一起说。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": false,
+            "issues": [
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"无\": 1, \"没有\": 1}",
+                "after": "{\"不\": 2, \"无\": 1, \"没有\": 1}"
+              },
+              {
+                "code": "certainty",
+                "severity": "warning",
+                "before": "{\"可能\": 1, \"提示\": 1, \"证明\": 1}",
+                "after": "{\"可能\": 1, \"提示\": 1}"
+              }
+            ],
+            "requires_review": true
+          }
+        },
+        {
+          "seed": 43,
+          "output": "灰桥判据，本项目原创的虚构比较规则。虚构了A=4.8mg B=6.2mg为软件冒烟测试，且强制比较A<B。不是真实数据，实际数据不做公布。反过来仅用数字，方向弄错结论照旧错。根据占位引文[10]规定灰桥判据仅室温无其他额外负载下可使用玩具判据。虽然目前的模拟A提示可能轻，但无法证明A更耐用。耐用性要与质量区别。",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "latex",
+                "severity": "error",
+                "before": "{\"$A<B$\": 1}",
+                "after": "{}"
+              },
+              {
+                "code": "protected_terms",
+                "severity": "error",
+                "before": "{\"灰桥判据\": 1}",
+                "after": "{\"灰桥判据\": 2}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"不\": 1, \"无\": 1, \"没有\": 1}",
+                "after": "{\"不\": 2, \"无\": 1, \"无法\": 1}"
+              }
+            ],
+            "requires_review": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "en-02",
+      "source": "We invented the Mirror Queue as a toy system for this project. Under a 2 Hz input, its hypothetical delay is 5 ms rather than 5 s. The test relation is $d=2n+1$, with $n=2$ [12]. These settings are synthetic, and the citation is a placeholder. A lower delay may occur only when the queue is empty; we have not shown that throughput increases or that the relation holds for larger queues.",
+      "attempts": [
+        {
+          "seed": 42,
+          "output": "As a toy system for this project, we designed the Mirror Queue. A hypothetical delay of 5 ms instead of 5 s for input 2 Hz. The relation of test is $d=2n+1$ where $n=2$ [12]. It is synthetic these conditions. (This reference is a placeholder.) Only if the queue is empty may there be lower delay. It is not demonstrated the throughput increases. The relation with large queues is not demonstrated.",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": false,
+            "issues": [
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"not\": 1}",
+                "after": "{\"not\": 2}"
+              }
+            ],
+            "requires_review": true
+          }
+        },
+        {
+          "seed": 43,
+          "output": "We have invented the Mirror Queue as a toy system for this project, and the hypothetical delay is 5 ms rather than 5 s for 2 Hz input. The test relation is d=2n+1, and n=2. [12]. These are synthetic parameters, and this citation is a dummy. One might get less delay only in the empty case. We didn't prove throughput increase nor proved the relation for higher queues.",
+          "stop_type": "eos",
+          "audit": {
+            "blocked": true,
+            "issues": [
+              {
+                "code": "latex",
+                "severity": "error",
+                "before": "{\"$d=2n+1$\": 1, \"$n=2$\": 1}",
+                "after": "{}"
+              },
+              {
+                "code": "negation",
+                "severity": "warning",
+                "before": "{\"not\": 1}",
+                "after": "{\"didn't\": 1}"
+              },
+              {
+                "code": "certainty",
+                "severity": "warning",
+                "before": "{\"may\": 1}",
+                "after": "{\"might\": 1, \"prove\": 1}"
+              }
+            ],
+            "requires_review": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -38,7 +38,7 @@ def main(argv=None):
     check.add_argument("source", type=Path)
     check.add_argument("candidate", type=Path)
     check.add_argument("--keep", action="append", default=[])
-    rewrite = sub.add_parser("rewrite", help="rewrite using a local trained completion model")
+    rewrite = sub.add_parser("rewrite", help="rewrite using a local completion or chat model")
     rewrite.add_argument("source", type=Path)
     rewrite.add_argument("-o", "--output", required=True, type=Path)
     rewrite.add_argument("--report", type=Path)

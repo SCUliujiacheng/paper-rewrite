@@ -75,6 +75,6 @@ Consumes API JSON. Chinese first, English selectable. Keep functions/components 
 Files: data/smoke.jsonl, scripts/*, docs/*, README*.md, .github/workflows/ci.yml, LICENSE, NOTICE.
 
 - [x] Add synthetic bilingual samples and evaluation script; do not adjust fixtures to hide observed failures.
-- [ ] Run full lint/tests/build/audit and actual inference. Save model revision/hash, timing and unedited outputs.
+- [x] Run full lint/tests/build/audit and actual inference. Save model revision/hash, timing and unedited outputs.
 - [x] Independent whole-project review; fix consequential findings with regression tests.
 - [ ] Commit, create Chinese public repository and push; if English inference succeeds create English edition and push; verify CI and remote SHAs.

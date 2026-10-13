@@ -80,7 +80,8 @@ _NEGATION = re.compile(
 )
 _CERTAINTY = re.compile(
     r"可能|或许|也许|似乎|提示|推测|倾向|必然|一定|确定|证明|证实|显然"
-    r"|\b(?:may|might|could|possibly|perhaps|suggests?|indicates?|likely|"
+    r"|计划|打算|(?<![模虚])拟(?![合人声])"
+    r"|\b(?:may|might|could|would|should|possibly|perhaps|suggests?|indicates?|likely|"
     r"certainly|definitely|always|proves?|demonstrates?|establishes?)\b",
     re.IGNORECASE,
 )
@@ -145,10 +146,12 @@ def _malformed(text: str) -> bool:
 
 
 def audit(source: str, candidate: str, protected_terms: list[str] | None = None) -> AuditResult:
-    """Compare occurrence counts of visible facts; warn about lexical polarity shifts.
+    """Compare visible facts; warn about lexical polarity and modality occurrence shifts.
 
     The rules intentionally reject some harmless notation changes. They cannot verify
     argument meaning, citation placement, or arbitrary entity/value associations.
+    Proposal markers are lexical counts: synonyms or omitted repeated modals can
+    trigger review warnings without proving that the meaning changed.
     """
     issues: list[Issue] = []
     if not source.strip() or _malformed(candidate):

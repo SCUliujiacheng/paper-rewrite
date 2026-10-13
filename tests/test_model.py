@@ -137,6 +137,34 @@ def test_chat_backend_rejects_remote_or_ambiguous_endpoints(url):
         LocalChatModel(url)
 
 
+async def test_chat_v2_instruction_forbids_decorations_and_completed_study_conversion():
+    import json
+
+    from paper_rewrite.model import LocalChatModel
+
+    source = "We would compare BM25 with a retrieval baseline in a proposed study."
+
+    def respond(request):
+        body = json.loads(request.content)
+        instruction = body["messages"][0]["content"]
+        assert "do not decorate them with new brackets or quotes" in instruction
+        assert "do not turn 'would' into present-tense facts" in instruction
+        assert "or a planned study into a completed one" in instruction
+        assert "未做的实验不能写成已完成" in instruction
+        data = json.loads(
+            body["messages"][1]["content"].split("<manuscript_data>\n")[1].split("\n</")[0]
+        )
+        assert data == {"source": source, "protected_terms": ["BM25"]}
+        return httpx.Response(
+            200,
+            json={"choices": [{"finish_reason": "stop", "message": {"content": source}}]},
+        )
+
+    model = LocalChatModel(transport=httpx.MockTransport(respond))
+    assert await model.complete(source, protected_terms=["BM25"]) == source
+    assert model.prompt_profile == "qwen_academic_editing_chat_v2"
+
+
 @pytest.mark.parametrize(
     "reply,code",
     [

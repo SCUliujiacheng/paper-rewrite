@@ -8,6 +8,9 @@ dedicated to CC0 as identified in each record.
 Third-party attribution
 -----------------------
 
+Prebuilt release frontends include React, React DOM and Scheduler under MIT.
+Their full license notice is reproduced in THIRD_PARTY_NOTICES.md.
+
 humanizer / sgaofen/humanizer-local-model
 Copyright 2026 Stephen Yu
 https://github.com/sgaofen/humanizer-local-model
