@@ -1,0 +1,59 @@
+Paper Rewrite / 改稿台
+Copyright 2026 Paper Rewrite contributors
+
+The original application code is licensed under the Apache License, Version 2.0.
+See LICENSE. Project-authored synthetic samples in data/smoke.jsonl are separately
+dedicated to CC0 as identified in each record.
+
+Third-party attribution
+-----------------------
+
+humanizer / sgaofen/humanizer-local-model
+Copyright 2026 Stephen Yu
+https://github.com/sgaofen/humanizer-local-model
+https://huggingface.co/jialinyyzz/humanizer
+
+The completion instruction and separator used in src/paper_rewrite/model.py
+come from the upstream humanizer prompt_format.json. The application retains
+that prompt format and sampling settings; the surrounding application,
+document processing, fidelity checks, detector adapter, and workbench are
+implemented in this repository.
+
+Upstream notice:
+humanizer
+Copyright 2026 Stephen Yu
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+This applies to the code in this repository and to the released model weights.
+
+The model weights are fine-tuned from google/gemma-4-12B
+(https://huggingface.co/google/gemma-4-12B), which Google releases under the
+Apache License, Version 2.0. This project is not affiliated with or endorsed by Google.
+
+The preceding upstream notice refers to the upstream humanizer repository.
+Paper Rewrite did not train these weights. Model weights and training datasets
+are not redistributed in this repository. The documented test model is
+jialinyyzz/humanizer at revision 7232532cb8466bd393544e97826e12e6b5e471ac.
+An upstream weight license is not a blanket license for training sources or
+for user manuscripts, and this project does not claim such rights.
+
+llama.cpp
+Copyright (c) 2023-2026 The ggml authors
+https://github.com/ggml-org/llama.cpp
+License: MIT; see the upstream LICENSE at the runtime version being installed.
+The documented runtime is b11583. llama.cpp and CUDA runtime files are installed
+separately and are not bundled with Paper Rewrite. Keep their respective
+notices and licenses when installing or redistributing them.
+
+GPTZero
+https://gptzero.me/developers
+The optional adapter uses the official API contract. GPTZero is a separate
+service; no detector code, model, endorsement, or detection effectiveness
+claim is implied. Real commercial detector measurements have not been made
+for this project. External text submission requires explicit consent.
+
+其他说明
+--------
+本项目没有自行训练或拥有上游模型。第三方名称仅用于标明来源与接口，
+不表示合作或背书。用户稿件不会自动提交给外部检测器。合成冒烟样本不是
+真实论文、学术数据或检测效果证据；用户应自行确认稿件与引用的权利。

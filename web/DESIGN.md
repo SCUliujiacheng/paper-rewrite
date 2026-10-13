@@ -1,0 +1,13 @@
+# Workbench design implementation
+
+Source: `../docs/design/workbench-concept.png`, 1536 × 1024. The accepted concept uses a white page, charcoal text, muted green actions, two editor columns and one quiet review band. It contains no hero imagery or raster assets to extract.
+
+Tokens: background `#ffffff`; ink `#182127`; accent `#205f4c`; border `#cbd3d7`; review surface `#f8faf9`; radius 4 px. Main content width is 1344 px; editor gutters 20 px; editor gap 42 px. Header 49 px, primary heading 31 px, UI body 14–16 px, draft text 19 px in a serif font, desktop editor height 344 px. Buttons, select controls and icon strokes share explicit typography and geometry. At 760 px the editors stack and toolbar controls wrap.
+
+Allowed concept copy: 改稿台; 中文 / English; 本地模型 · 未连接; 修改与核对; 先改表达，再逐段核对数据、引用和结论。; 导入文本; 载入示例; 清空; 中文; 候选数 2; 原文; 改写稿; 改写结果会显示在这里。; 保留原样的术语（每行一个）; 开始改写; 稿件默认只在本机处理。; 核对记录; 内容检查; 检测结果; 尚无记录；改写后可逐段查看。; 自动检查不能证明原意完全一致，请核对后再使用。
+
+Intentional functional additions: character count, paragraph limit notice, actionable model connection error and refresh, literal API error, output export buttons, state-dependent audit rows and raw detector reports. The initial source is blank; the concept's synthetic sample is available via Load example. Protected terms show BM25 as a placeholder. Output is read-only, so edits cannot accidentally retain stale detector evidence. Source, text-language, candidate-count and protected-term edits cancel current operations and clear prior output, audit, detector and consent state. Interface language changes preserve the draft.
+
+UI ownership: App composes the shell; Toolbar owns import and settings controls; Editors owns document fields and exports; ContentChecks owns segment diagnostics; DetectorPanel owns explicit detector consent and safe raw report display; useWorkbench owns API and invalidation state. No HTML injection, automatic uploads, analytics or draft persistence.
+
+Verification handoff: compare the accepted concept and live screenshot using view_image at 1536 × 1024, then test desktop and mobile. Check copy, white palette, twin-editor geometry, typography, review-band borders, whitespace, icon strokes and responsive overflow. Backend readiness and warning banners naturally add height in disconnected/error states. Frontend unit behavior, TypeScript, production build and npm dependency audit are runnable from this folder.
