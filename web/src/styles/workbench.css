@@ -12,6 +12,7 @@ h1 { font-size: 31px; line-height: 1.4; font-weight: 600; margin: 0 0 3px; lette
 .intro p { font-size: 16px; color: #4f5961; line-height: 1.6; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 18px; margin-bottom: 18px; }
 .toolbar-group { display: flex; gap: 9px; align-items: center; }
+.example-notice { margin: -8px 20px 15px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .toolbar-group button { min-width: 110px; }
 .selectors select { width: 146px; }
 .editors { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 42px; padding: 0 20px; }
@@ -33,6 +34,8 @@ h1 { font-size: 31px; line-height: 1.4; font-weight: 600; margin: 0 0 3px; lette
 .export-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding-top: 12px; font-size: 12px; color: var(--muted); }
 .export-row > div { display: flex; gap: 6px; }
 .export-row button { min-height: 32px; font-size: 12px; padding: 5px 12px; }
+.manual-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-top: 12px; color: var(--muted); font-size: 12px; }
+.manual-controls button { min-height: 32px; padding: 5px 12px; font-size: 12px; }
 .page-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 12px; line-height: 1.65; color: #78828a; padding: 15px 0 26px; }
 @media (min-height: 940px) and (min-width: 900px) { .intro { padding-top: 22px; padding-bottom: 21px; } .draft-editor { height: 344px; } }
 @media (min-width: 1400px) { .toolbar { margin-bottom: 20px; } .draft-editor { height: 344px; } }
@@ -48,6 +51,7 @@ h1 { font-size: 31px; line-height: 1.4; font-weight: 600; margin: 0 0 3px; lette
   h1 { font-size: 27px; }
   .intro p { font-size: 14px; }
   .toolbar { padding: 0; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .example-notice { margin-left: 0; margin-right: 0; }
   .toolbar-group { flex: 1; gap: 6px; }
   .toolbar-group button { min-width: 0; flex: 1; padding: 8px 10px; font-size: 12px; gap: 6px; }
   .selectors { flex-basis: 100%; }

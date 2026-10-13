@@ -14,7 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .detectors import GPTZeroDetector, validate_manual_report
 from .guards import audit
-from .model import LocalModel
+from .model import create_model
 from .pipeline import Rewriter
 from .settings import default_language
 
@@ -85,10 +85,7 @@ async def while_connected(request: Request, operation):
 
 
 def create_app(*, model=None, detector=None) -> FastAPI:
-    model = model or LocalModel(
-        os.getenv("PAPER_MODEL_URL", "http://127.0.0.1:8091"),
-        name=os.getenv("PAPER_MODEL_NAME", "humanizer-12b"),
-    )
+    model = model or create_model()
     detector = detector or GPTZeroDetector(os.getenv("GPTZERO_API_KEY"))
     rewriter = Rewriter(model)
     lock = asyncio.Lock()

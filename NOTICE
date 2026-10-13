@@ -2,7 +2,7 @@ Paper Rewrite / 改稿台
 Copyright 2026 Paper Rewrite contributors
 
 The original application code is licensed under the Apache License, Version 2.0.
-See LICENSE. Project-authored synthetic samples in data/smoke.jsonl are separately
+See LICENSE. Project-authored synthetic samples in data/*.jsonl are separately
 dedicated to CC0 as identified in each record.
 
 Third-party attribution
@@ -15,7 +15,7 @@ https://huggingface.co/jialinyyzz/humanizer
 
 The completion instruction and separator used in src/paper_rewrite/model.py
 come from the upstream humanizer prompt_format.json. The application retains
-that prompt format and sampling settings; the surrounding application,
+that prompt format; sampling ablations are separately identified in reports. The surrounding application,
 document processing, fidelity checks, detector adapter, and workbench are
 implemented in this repository.
 
@@ -36,6 +36,21 @@ are not redistributed in this repository. The documented test model is
 jialinyyzz/humanizer at revision 7232532cb8466bd393544e97826e12e6b5e471ac.
 An upstream weight license is not a blanket license for training sources or
 for user manuscripts, and this project does not claim such rights.
+
+Qwen3.5 / Qwen team, Alibaba Cloud
+https://huggingface.co/Qwen/Qwen3.5-4B
+Official model revision: 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a
+License: Apache-2.0, as published in the official model repository.
+The optional local chat backend uses the model's own chat template. Its editing
+instruction is written for this project. Qwen is a general instruction model,
+not a model trained by this project or a verified detector-evasion system.
+
+Unsloth GGUF quantization
+https://huggingface.co/unsloth/Qwen3.5-4B-GGUF
+Quantized artifact revision: e87f176479d0855a907a41277aca2f8ee7a09523
+License: Apache-2.0, as declared by the quantizer's model card.
+Model files are installed separately, not redistributed in this repository.
+Source and quantization authors retain their respective notices and attribution.
 
 llama.cpp
 Copyright (c) 2023-2026 The ggml authors

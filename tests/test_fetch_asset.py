@@ -3,6 +3,8 @@ import importlib.util
 import threading
 import time
 from collections import Counter
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime, parsedate_to_datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
@@ -19,7 +21,14 @@ spec.loader.exec_module(fetch)
 @pytest.fixture
 def asset_server():
     data = b"published binary asset\x00\x01\x02" * 20
-    state = {"ranges": [], "mode": "valid", "active": 0, "peak": 0}
+    state = {
+        "ranges": [],
+        "mode": "valid",
+        "active": 0,
+        "peak": 0,
+        "request_times": [],
+        "retry_after": "2",
+    }
     lock = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
@@ -31,6 +40,7 @@ def asset_server():
             start, end = (int(value) for value in raw_range.removeprefix("bytes=").split("-"))
             with lock:
                 state["ranges"].append((start, end))
+                state["request_times"].append((time.monotonic(), time.time()))
                 state["active"] += 1
                 state["peak"] = max(state["peak"], state["active"])
                 occurrence = state["ranges"].count((start, end))
@@ -39,6 +49,18 @@ def asset_server():
                 if state["mode"] == "fail_later" and start >= 64:
                     self.send_error(503)
                     return
+                if (
+                    state["mode"].startswith("retry_after_")
+                    or state["mode"] == "global_retry_after"
+                    and start == 0
+                ) and occurrence == 1:
+                    self.send_response(503 if state["mode"].endswith("503") else 429)
+                    self.send_header("Retry-After", state["retry_after"])
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                    return
+                if state["mode"] == "global_retry_after" and start == 64:
+                    time.sleep(0.1)
                 self.send_response(200 if state["mode"] == "ignore_range" else 206)
                 offset = 1 if state["mode"] == "wrong_range" else 0
                 total = len(data) + (1 if state["mode"] == "wrong_total" else 0)
@@ -185,7 +207,115 @@ def test_requires_complete_sha256_before_network_activity(asset_server, tmp_path
     assert asset_server[2]["ranges"] == []
 
 
-def test_rejects_more_than_eight_workers_before_network_activity(asset_server, tmp_path):
+def test_rejects_more_than_thirty_two_workers_before_network_activity(asset_server, tmp_path):
     with pytest.raises(ValueError):
-        fetch.download_asset(asset_server[0], tmp_path / "asset", 480, "a" * 64, workers=9)
+        fetch.download_asset(asset_server[0], tmp_path / "asset", 480, "a" * 64, workers=33)
     assert asset_server[2]["ranges"] == []
+
+
+def test_allows_thirty_two_workers_with_verified_streamed_parts(asset_server, tmp_path):
+    url, data, state = asset_server
+    target = tmp_path / "asset.bin"
+    fetch.download_asset(
+        url, target, len(data), hashlib.sha256(data).hexdigest(), part_size=64, workers=32
+    )
+    assert target.read_bytes() == data
+    assert state["peak"] <= 32
+
+
+@pytest.mark.parametrize("status", [429, 503])
+def test_honors_retry_after_seconds_before_retrying_http_errors(asset_server, tmp_path, status):
+    url, data, state = asset_server
+    state["mode"] = f"retry_after_{status}"
+    target = tmp_path / "asset.bin"
+    fetch.download_asset(
+        url,
+        target,
+        len(data),
+        hashlib.sha256(data).hexdigest(),
+        part_size=len(data),
+        workers=1,
+        retries=1,
+    )
+    assert target.read_bytes() == data
+    assert len(state["request_times"]) == 2
+    assert state["request_times"][1][0] - state["request_times"][0][0] >= 2
+
+
+def test_honors_retry_after_http_date(asset_server, tmp_path):
+    url, data, state = asset_server
+    state["mode"] = "retry_after_429"
+    state["retry_after"] = format_datetime(datetime.now(UTC) + timedelta(seconds=3), usegmt=True)
+    target = tmp_path / "asset.bin"
+    fetch.download_asset(
+        url,
+        target,
+        len(data),
+        hashlib.sha256(data).hexdigest(),
+        part_size=len(data),
+        workers=1,
+        retries=1,
+    )
+    assert target.read_bytes() == data
+    assert state["request_times"][1][1] >= parsedate_to_datetime(state["retry_after"]).timestamp()
+
+
+def test_huge_retry_after_fails_without_an_early_retry(asset_server, tmp_path):
+    url, data, state = asset_server
+    state["mode"] = "retry_after_429"
+    state["retry_after"] = "3600"
+    target = tmp_path / "asset.bin"
+    with pytest.raises(ValueError, match="Retry-After"):
+        fetch.download_asset(
+            url,
+            target,
+            len(data),
+            hashlib.sha256(data).hexdigest(),
+            part_size=len(data),
+            workers=1,
+            retries=1,
+        )
+    assert len(state["request_times"]) == 1
+    assert not target.exists()
+
+
+def test_rate_limit_pauses_new_ranges_across_workers(asset_server, tmp_path):
+    url, data, state = asset_server
+    state["mode"] = "global_retry_after"
+    target = tmp_path / "asset.bin"
+    fetch.download_asset(
+        url,
+        target,
+        len(data),
+        hashlib.sha256(data).hexdigest(),
+        part_size=64,
+        workers=2,
+        retries=1,
+    )
+    assert target.read_bytes() == data
+    first_time = state["request_times"][state["ranges"].index((0, 63))][0]
+    later = [
+        moment[0]
+        for span, moment in zip(state["ranges"], state["request_times"], strict=True)
+        if span[0] >= 128
+    ]
+    assert min(later) - first_time >= 2
+
+
+def test_exhausted_rate_limit_stops_new_ranges_across_workers(asset_server, tmp_path):
+    url, data, state = asset_server
+    state["mode"] = "global_retry_after"
+    target = tmp_path / "asset.bin"
+    with pytest.raises(HTTPError):
+        fetch.download_asset(
+            url,
+            target,
+            len(data),
+            hashlib.sha256(data).hexdigest(),
+            part_size=64,
+            workers=2,
+            retries=0,
+        )
+    assert not target.exists()
+    assert all(start < 128 for start, _ in state["ranges"])
+    assert state["ranges"].count((0, 63)) == 1

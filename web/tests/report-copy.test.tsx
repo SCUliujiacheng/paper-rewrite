@@ -75,3 +75,46 @@ it('preserves machine codes in JSON exports despite translated inspection labels
   expect(exported.segments[0].audit.issues[0]).toEqual({ code: 'numbers', severity: 'error', before: '{"5次":1}', after: '{"6次":1}' });
   expect(exported.segments[0].attempts[0].error).toBe('model_output_truncated');
 });
+
+it('labels warning-only retained candidates as unused rather than source damage', async () => {
+  const warningOnly = { ...report, segments: [{ ...report.segments[0], audit: { blocked: false, requires_review: true, issues: [{ code: 'negation', severity: 'warning', before: '{}', after: '{"不":1}' }] } }] };
+  vi.stubGlobal('fetch', async (url: string) => new Response(JSON.stringify(url === '/api/health'
+    ? { model_ready: true, model: 'local-test', detector_configured: false, version: '0.1.0', default_language: 'zh' }
+    : warningOnly)));
+  render(<App />);
+  fireEvent.change(screen.getByLabelText('原文'), { target: { value: report.source } });
+  await userEvent.click(screen.getByRole('button', { name: '开始改写' }));
+  expect(await screen.findByText('未采用候选的检查结果')).toBeInTheDocument();
+  expect(screen.queryByText('存在内容风险')).not.toBeInTheDocument();
+});
+
+it('explains candidates requiring manual review in both interface languages', async () => {
+  const manualWarning = { ...report, warnings: ['candidates_require_manual_review'] };
+  vi.stubGlobal('fetch', async (url: string) => new Response(JSON.stringify(url === '/api/health'
+    ? { model_ready: true, model: 'local-test', detector_configured: false, version: '0.1.0', default_language: 'zh' }
+    : manualWarning)));
+  render(<App />);
+  fireEvent.change(screen.getByLabelText('原文'), { target: { value: report.source } });
+  await userEvent.click(screen.getByRole('button', { name: '开始改写' }));
+  expect(await screen.findByText('部分候选涉及否定或结论强弱变化，已保留供人工核对。')).toBeInTheDocument();
+  expect(screen.queryByText('candidates_require_manual_review')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'English' }));
+  expect(screen.getByText('Some candidates change negation or the strength of conclusions and have been kept for manual review.')).toBeInTheDocument();
+  expect(screen.queryByText('candidates_require_manual_review')).not.toBeInTheDocument();
+});
+
+it('explains rejected reasoning output in Chinese and English', async () => {
+  const reasoningReport = { ...report, status: 'failed', segments: [{ ...report.segments[0], status: 'failed', attempts: [{ text: '', audit: null, error: 'model_reasoning_output' }] }] };
+  vi.stubGlobal('fetch', async (url: string) => new Response(JSON.stringify(url === '/api/health'
+    ? { model_ready: true, model: 'local-test', detector_configured: false, version: '0.1.0', default_language: 'zh' }
+    : reasoningReport)));
+  render(<App />);
+  fireEvent.change(screen.getByLabelText('原文'), { target: { value: report.source } });
+  await userEvent.click(screen.getByRole('button', { name: '开始改写' }));
+  await userEvent.click(await screen.findByText('候选记录'));
+  expect(screen.getByText('模型返回了思考内容，未作为改写稿采用。')).toBeInTheDocument();
+  expect(screen.queryByText('model_reasoning_output')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'English' }));
+  expect(screen.getByText('The model returned reasoning content; it was not used as a rewrite.')).toBeInTheDocument();
+  expect(screen.queryByText('model_reasoning_output')).not.toBeInTheDocument();
+});

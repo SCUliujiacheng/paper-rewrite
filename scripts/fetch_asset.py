@@ -10,10 +10,13 @@ import os
 import re
 import shutil
 import tempfile
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import UTC
+from email.utils import parsedate_to_datetime
 from pathlib import Path
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
@@ -28,6 +31,20 @@ def _sha256(path: Path) -> str:
 
 def _identity(path: Path) -> tuple[int, int] | None:
     return (path.stat().st_size, path.stat().st_mtime_ns) if path.exists() else None
+
+
+def _retry_after_seconds(value: str | None) -> float | None:
+    if value is None:
+        return None
+    if value.strip().isdigit():
+        return float(value.strip())
+    try:
+        deadline = parsedate_to_datetime(value)
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=UTC)
+        return max(0.0, deadline.timestamp() - time.time())
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 def download_asset(
@@ -52,8 +69,8 @@ def download_asset(
         raise ValueError("A complete SHA256 is required")
     if urlsplit(url).scheme not in {"http", "https"}:
         raise ValueError("Only HTTP(S) asset URLs are supported")
-    if not 1 <= workers <= 8 or part_size < 1 or expected_size < 1 or retries < 0 or timeout <= 0:
-        raise ValueError("Invalid download limits; workers must be between 1 and 8")
+    if not 1 <= workers <= 32 or part_size < 1 or expected_size < 1 or retries < 0 or timeout <= 0:
+        raise ValueError("Invalid download limits; workers must be between 1 and 32")
     sha256 = sha256.lower()
     target = Path(destination)
     original_identity = _identity(target)
@@ -120,7 +137,32 @@ def download_asset(
                 os.replace(temporary, part)
                 part.with_suffix(".sha256").write_text(digest.hexdigest(), encoding="ascii")
 
+    cooldown_lock = threading.Lock()
+    cooldown_until = 0.0
+    stop_download = threading.Event()
+    fatal_error: BaseException | None = None
+
+    def record_fatal(error: BaseException) -> None:
+        nonlocal fatal_error
+        with cooldown_lock:
+            if fatal_error is None:
+                fatal_error = error
+        stop_download.set()
+
+    def wait_for_cooldown() -> None:
+        while True:
+            if stop_download.is_set():
+                raise RuntimeError("Download stopped after range failure; verified parts retained")
+            with cooldown_lock:
+                delay = cooldown_until - time.monotonic()
+            if delay <= 0:
+                return
+            time.sleep(min(delay, 1))
+
     def fetch_part(start: int, end: int) -> int:
+        nonlocal cooldown_until
+        if stop_download.is_set():
+            raise RuntimeError("Download stopped after range failure; verified parts retained")
         path = part_path(start)
         checksum_path = path.with_suffix(".sha256")
         size = end - start + 1
@@ -131,6 +173,7 @@ def download_asset(
         temporary = path.with_suffix(".pending")
         for attempt in range(retries + 1):
             try:
+                wait_for_cooldown()
                 request = Request(
                     url,
                     headers={
@@ -166,9 +209,36 @@ def download_asset(
                 return size
             except (OSError, URLError, ValueError) as error:
                 temporary.unlink(missing_ok=True)
-                if attempt == retries:
+                delay = float(min(2**attempt, 8))
+                rate_limited = isinstance(error, HTTPError) and error.code in {429, 503}
+                if isinstance(error, HTTPError):
+                    try:
+                        if rate_limited:
+                            retry_after = _retry_after_seconds(error.headers.get("Retry-After"))
+                            if retry_after is not None:
+                                delay = retry_after
+                            if delay > 60:
+                                failure = ValueError(
+                                    "Retry-After exceeds maximum 60-second wait; "
+                                    "retry download later"
+                                )
+                                record_fatal(failure)
+                                raise failure from error
+                            with cooldown_lock:
+                                cooldown_until = max(cooldown_until, time.monotonic() + delay)
+                    finally:
+                        error.close()
+                if attempt == retries or stop_download.is_set():
+                    record_fatal(error)
                     raise error
-                time.sleep(min(2**attempt, 8))
+                if rate_limited:
+                    print(
+                        f"HTTP {error.code}: pausing requests for at least {delay:.2f}s",
+                        flush=True,
+                    )
+                    wait_for_cooldown()
+                else:
+                    time.sleep(delay)
         raise RuntimeError("Unreachable retry state")
 
     started = time.monotonic()
@@ -185,8 +255,11 @@ def download_asset(
                     flush=True,
                 )
         except BaseException:
+            stop_download.set()
             for future in futures:
                 future.cancel()
+            if fatal_error is not None:
+                raise fatal_error from None
             raise
     assembled: Path | None = None
     try:

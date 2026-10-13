@@ -10,11 +10,15 @@ from .documents import split_document
 from .guards import AuditResult, audit
 from .model import ModelError
 
+SELECTION_POLICY = "no_audit_issues_v1"
+
 
 class Model(Protocol):
     name: str
 
-    async def complete(self, text: str, seed: int = 0) -> str: ...
+    async def complete(
+        self, text: str, seed: int = 0, protected_terms: list[str] | tuple[str, ...] = ()
+    ) -> str: ...
 
 
 class Attempt(BaseModel):
@@ -72,6 +76,7 @@ class Rewriter:
         reports: list[SegmentReport] = []
         assembled: list[str] = []
         model_failed = False
+        warning_candidates_withheld = False
         for segment in segments:
             original = segment.text
             relevant = [term for term in terms if term in original]
@@ -88,7 +93,9 @@ class Rewriter:
                         try:
                             proposal = (
                                 await self.model.complete(
-                                    original, seed=42 + segment.id * 3 + attempt_index
+                                    original,
+                                    seed=42 + segment.id * 3 + attempt_index,
+                                    protected_terms=relevant,
                                 )
                             ).strip()
                         except ModelError as error:
@@ -98,11 +105,14 @@ class Rewriter:
                             model_failed = str(error) not in {
                                 "model_output_truncated",
                                 "model_empty_or_invalid_output",
+                                "model_reasoning_output",
                             }
                             break
                         candidate_audit = audit(original, proposal, relevant)
                         attempts.append(Attempt(text=proposal, audit=candidate_audit))
-                        if not candidate_audit.blocked and proposal != original:
+                        if any(issue.severity == "warning" for issue in candidate_audit.issues):
+                            warning_candidates_withheld = True
+                        if not candidate_audit.issues and proposal != original:
                             output, check, status = proposal, candidate_audit, "rewritten"
                             break
                     if status == "retained" and attempts and attempts[-1].audit:
@@ -141,5 +151,6 @@ class Rewriter:
             output_sha256=text_hash(output),
             status=status,
             warnings=["human_review_required"]
-            + (["original_retained_in_some_segments"] if incomplete else []),
+            + (["original_retained_in_some_segments"] if incomplete else [])
+            + (["candidates_require_manual_review"] if warning_candidates_withheld else []),
         )

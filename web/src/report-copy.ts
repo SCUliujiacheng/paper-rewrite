@@ -19,6 +19,7 @@ const labels: Record<Language, Record<Category, Record<string, string>>> = {
     warnings: {
       human_review_required: '请人工核对论点、数据和引用。',
       original_retained_in_some_segments: '部分段落未采用候选稿，已保留原文。',
+      candidates_require_manual_review: '部分候选涉及否定或结论强弱变化，已保留供人工核对。',
     },
     errors: {
       model_response_too_large: '模型响应超出大小限制。',
@@ -26,6 +27,7 @@ const labels: Record<Language, Record<Category, Record<string, string>>> = {
       model_invalid_response: '模型响应格式无效。',
       model_output_truncated: '模型输出被截断，未采用该候选。',
       model_empty_or_invalid_output: '模型输出为空或无效，未采用该候选。',
+      model_reasoning_output: '模型返回了思考内容，未作为改写稿采用。',
     },
     context: { rejected_candidate: '未采用候选的检查结果' },
   },
@@ -46,6 +48,7 @@ const labels: Record<Language, Record<Category, Record<string, string>>> = {
     warnings: {
       human_review_required: 'Review arguments, data and citations manually.',
       original_retained_in_some_segments: 'Some candidates were not used; the source was retained.',
+      candidates_require_manual_review: 'Some candidates change negation or the strength of conclusions and have been kept for manual review.',
     },
     errors: {
       model_response_too_large: 'Model response exceeded the size limit.',
@@ -53,6 +56,7 @@ const labels: Record<Language, Record<Category, Record<string, string>>> = {
       model_invalid_response: 'Model response format is invalid.',
       model_output_truncated: 'Model output was truncated; this candidate was not used.',
       model_empty_or_invalid_output: 'Model output was empty or invalid; this candidate was not used.',
+      model_reasoning_output: 'The model returned reasoning content; it was not used as a rewrite.',
     },
     context: { rejected_candidate: 'Checks for an unused candidate' },
   },

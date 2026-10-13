@@ -49,7 +49,7 @@ describe('workbench behavior', () => {
     fireEvent.change(screen.getByLabelText('文本语言'), { target: { value: 'en' } });
     await generate();
     expect(calls.find(call => call.url === '/api/rewrite')?.body).toEqual({ text: '原文 5 次。', language: 'en', candidates: 3, protected_terms: ['BM25', 'DOI'] });
-    expect(screen.getByLabelText('改写稿')).toHaveAttribute('readonly');
+    expect(screen.getByLabelText('改写稿')).not.toHaveAttribute('readonly');
     expect(screen.getByText('已改写')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '导出 TXT' })).toBeEnabled();
   });
@@ -219,5 +219,22 @@ describe('workbench behavior', () => {
     fireEvent.change(screen.getByLabelText('导入检测报告文件'), { target: { files: [new File([JSON.stringify(wrapper)], 'rewrite-report.json')] } });
     expect(await screen.findByRole('alert')).toHaveTextContent('JSON');
     expect(calls.some(call => call.url === '/api/detector-report')).toBe(false);
+  });
+  it('keeps a visible fictional notice beside the example workflow without generating results', async () => {
+    render(<App />);
+    expect(screen.getByRole('note')).toHaveTextContent('示例为虚构文本，不代表真实研究结果。');
+    await userEvent.click(screen.getByRole('button', { name: '载入示例' }));
+    expect((screen.getByLabelText('原文') as HTMLTextAreaElement).value).toContain('82.4%');
+    expect(screen.getByRole('note')).toHaveTextContent('示例为虚构文本，不代表真实研究结果。');
+    expect(screen.getByLabelText('改写稿')).toHaveValue('');
+    expect(calls.some(call => call.url === '/api/rewrite' || call.url === '/api/detect')).toBe(false);
+    await userEvent.click(screen.getByRole('button', { name: '清空' }));
+    expect(screen.getByRole('note')).toHaveTextContent('示例为虚构文本，不代表真实研究结果。');
+  });
+  it('shows the fictional example notice in English', async () => {
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: 'English' }));
+    expect(screen.getByRole('note')).toHaveTextContent('The example is fictional and does not represent real research findings.');
+    expect(screen.queryByText('示例为虚构文本，不代表真实研究结果。')).not.toBeInTheDocument();
   });
 });

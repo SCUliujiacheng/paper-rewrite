@@ -11,7 +11,7 @@ class SequenceModel:
         self.outputs = iter(outputs)
         self.calls = []
 
-    async def complete(self, text, seed=0):
+    async def complete(self, text, seed=0, protected_terms=()):
         self.calls.append(text)
         result = next(self.outputs)
         if isinstance(result, Exception):
@@ -97,3 +97,65 @@ async def test_service_failure_does_not_repeat_timeout_for_every_paragraph():
     result = await Rewriter(model).rewrite("研究尚待验证。\n\n实验重复5次。", candidates=1)
     assert result.status == "failed"
     assert len(model.calls) == 1
+
+
+@pytest.mark.parametrize(
+    "source,proposal,code",
+    [
+        (
+            "我们未观察到稳定性随路径长度单调增加的现象。",
+            "路径越长越没有稳定性。",
+            "negation",
+        ),
+        ("结果可能适用于室温。", "结果一定适用于室温。", "certainty"),
+    ],
+)
+async def test_warning_only_proposals_are_visible_but_never_auto_selected(source, proposal, code):
+    result = await Rewriter(SequenceModel([proposal])).rewrite(source, "zh", [], 1)
+    assert result.output == source
+    assert result.status == "unchanged"
+    assert result.segments[0].status == "retained"
+    attempt = result.segments[0].attempts[0]
+    assert attempt.text == proposal
+    assert not attempt.audit.blocked
+    assert any(issue.code == code for issue in attempt.audit.issues)
+    assert "candidates_require_manual_review" in result.warnings
+
+
+async def test_clean_later_candidate_is_selected_after_warning_candidate_is_withheld():
+    source = "结果可能适用于室温。"
+    warning = "结果一定适用于室温。"
+    clean = "本次结果可能适用于室温。"
+    result = await Rewriter(SequenceModel([warning, clean])).rewrite(source, "zh", [], 2)
+    assert result.output == clean
+    assert result.status == "completed"
+    assert [attempt.text for attempt in result.segments[0].attempts] == [warning, clean]
+    assert not result.segments[0].audit.issues
+    assert "candidates_require_manual_review" in result.warnings
+
+
+async def test_warning_candidates_never_exceed_bounded_sampling_limit():
+    model = SequenceModel(["结果一定适用于室温。"] * 3)
+    result = await Rewriter(model).rewrite("结果可能适用于室温。", candidates=2)
+    assert len(result.segments[0].attempts) == 2
+    assert result.output == "结果可能适用于室温。"
+    assert result.warnings.count("candidates_require_manual_review") == 1
+
+
+async def test_pipeline_sends_only_paragraph_relevant_protected_terms():
+    class TermModel(SequenceModel):
+        async def complete(self, text, seed=0, protected_terms=()):
+            assert protected_terms == ["BM25"]
+            return "BM25适用于检索。"
+
+    result = await Rewriter(TermModel([])).rewrite(
+        "BM25用于检索。", protected_terms=["BM25", "RAG"]
+    )
+    assert result.output == "BM25适用于检索。"
+
+
+async def test_reasoning_output_failure_is_local_and_later_paragraph_can_run():
+    model = SequenceModel([ModelError("model_reasoning_output"), "本实验重复5次。"])
+    result = await Rewriter(model).rewrite("研究尚待验证。\n\n实验重复5次。", candidates=1)
+    assert [segment.status for segment in result.segments] == ["failed", "rewritten"]
+    assert result.status == "partial"

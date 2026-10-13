@@ -107,7 +107,7 @@ def test_second_concurrent_rewrite_is_busy():
         class WaitingModel:
             name = "test"
 
-            async def complete(self, text, seed=0):
+            async def complete(self, text, seed=0, protected_terms=()):
                 started.set()
                 await finish.wait()
                 return "本实验重复5次。"
@@ -137,3 +137,50 @@ def test_check_endpoint_protects_blockquoted_fenced_code(client):
     assert reply.status_code == 200
     assert reply.json()["blocked"]
     assert any(issue["code"] == "code" for issue in reply.json()["issues"])
+
+
+def test_app_uses_configured_qwen_factory_and_passes_terms(monkeypatch):
+    import json
+
+    import paper_rewrite.app as app_module
+    from paper_rewrite.model import create_model
+
+    monkeypatch.setenv("PAPER_MODEL_BACKEND", "qwen")
+    monkeypatch.setenv("PAPER_MODEL_NAME", "qwen-test-alias")
+
+    def respond(request):
+        if request.url.path == "/health":
+            return httpx.Response(200, json={"status": "ok"})
+        assert request.url.path == "/v1/chat/completions"
+        body = json.loads(request.content)
+        assert body["model"] == "qwen-test-alias"
+        assert '"protected_terms": ["BM25"]' in body["messages"][1]["content"]
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": "BM25适用于检索。"},
+                    }
+                ]
+            },
+        )
+
+    def factory(**kwargs):
+        return create_model(transport=httpx.MockTransport(respond), **kwargs)
+
+    def old_constructor(*args, **kwargs):
+        pytest.fail("App bypassed the configured backend factory")
+
+    monkeypatch.setattr(app_module, "create_model", factory, raising=False)
+    monkeypatch.setattr(app_module, "LocalModel", old_constructor, raising=False)
+    with TestClient(app_module.create_app(), base_url="http://127.0.0.1") as session:
+        assert session.get("/api/health").json()["model"] == "qwen-test-alias"
+        response = session.post(
+            "/api/rewrite",
+            json={"text": "BM25用于检索。", "protected_terms": ["BM25"], "candidates": 1},
+        )
+    assert response.status_code == 200
+    assert response.json()["output"] == "BM25适用于检索。"
+    assert response.json()["model"] == "qwen-test-alias"

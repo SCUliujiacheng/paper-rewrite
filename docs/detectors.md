@@ -26,8 +26,18 @@ Manual import validates the same GPTZero report shape, exact UTF-8 text hashes, 
 
 Checked on 2026-10-14: the official developer and support pages document the endpoint, request/authentication fields, classification, and class probabilities. The official probability article distinguishes document class probabilities from sentence averages. The linked detailed Stoplight route returned 404 during this check. Response envelope and version fields have not been verified with a real key.
 
+## 中文支持与试用范围 / Chinese support and trial scope
+
+2026-10-14 核对的 [GPTZero 官方语言支持页](https://support.gptzero.me/articles/1682612063-what-languages-does-gptzero-support)明确列出中文。本项目已实现 API 适配，但没有真实中文论文检测或改写降分测量，也没有验证其他论文平台的检测结果。[开发者页面](https://gptzero.me/developers)提醒检测并非完全准确，对较长文本和英文散文表现更好，结果应作为进一步核查的线索。
+
+GPTZero currently lists Chinese among its supported languages. This project implements the API adapter but has no live Chinese-paper detection measurements or before/after score evidence, and has not validated results from other paper platforms. The official developer page warns that detection is imperfect, performs best on longer texts and English prose, and should inform further review.
+
+[官方免费试用说明](https://support.gptzero.me/articles/7472477101-can-i-try-the-api-for-free)提到有限次数的免账号、免密钥 API 试用。不过，该说明及文档首页指向的两个试用路由在本次核对时均返回404；尚未核实可用且中文范围明确的官方免密钥检测端点。当前适配器仍要求密钥与用户明确同意，没有接入未验证的试用或网页内部接口。
+
+GPTZero documents a limited no-account, no-key API trial. Both linked trial documentation routes returned 404 during this check, so an available official no-key endpoint with a clear Chinese scope has not been verified. The current adapter requires a key and explicit consent; it does not use an unverified trial or private website interface.
+
 ## 合成样本 / Synthetic corpus
 
-`data/smoke.jsonl` 包含14段项目原创样例（中文8段、英文6段），以CC0发布。所有实验、数值和引文占位符均为虚构，仅用于回归与冒烟测试；不是人类论文语料，也不支持泛化或检测器效果结论。
+`data/smoke.jsonl` 包含14段项目原创样例（中文8段、英文6段）；`data/prose.jsonl` 补充10段尚未实施的方法设计初稿（中文6段、英文4段），共24段。两个集合均为 AI 辅助编写的 CC0 开发材料。冒烟样例中的实验、数值和引文占位符均为虚构；补充样例描述拟议方案，没有宣称完成研究或获得结果。它们不是留出集或人类论文语料，不能支持泛化或检测器效果结论；评测应公开全部案例与原始结果。
 
-The 14 project-authored CC0 snippets (8 Chinese, 6 English) contain invented toy experiments, numbers, and placeholder citations. They are regression/smoke fixtures, not a human-paper corpus or evidence of generalization or detector effectiveness.
+`data/smoke.jsonl` contains 14 project-authored snippets (8 Chinese, 6 English), and `data/prose.jsonl` adds 10 methodological proposals (6 Chinese, 4 English), totaling 24. Both are AI-assisted CC0 development fixtures, not held-out data or a human-paper corpus. Smoke experiments, numbers, and citation placeholders are invented; the supplement describes proposed research, without completed-study or result claims. Publish every case and its raw outcome. Neither corpus establishes generalization or detector effectiveness.

@@ -1,9 +1,9 @@
 import { download } from '../api';
 import type { Workbench } from '../useWorkbench';
 
-export function Editors({ work }: { work: Workbench }) {
+export function Editors({ work, onReview }: { work: Workbench; onReview: () => void }) {
   const { t, report } = work;
-  function exportReport() { if (report) download(JSON.stringify({ ...report, detector_report: work.detectorReport, detector_report_origin: work.detectorReport ? work.imported ? 'user_supplied' : 'external_api' : 'not_run' }, null, 2), 'rewrite-report.json', 'application/json;charset=utf-8'); }
+  function exportReport() { if (report) download(JSON.stringify({ ...report, ...(work.manualRevision ? { manual_revision: work.manualRevision } : {}), detector_report: work.detectorReport, detector_report_origin: work.detectorReport ? work.imported ? 'user_supplied' : 'external_api' : 'not_run' }, null, 2), 'rewrite-report.json', 'application/json;charset=utf-8'); }
   return <>
     <div className="editors">
       <div className="editor-column">
@@ -15,8 +15,11 @@ export function Editors({ work }: { work: Workbench }) {
       </div>
       <div className="editor-column output-column">
         <label className="editor-label" htmlFor="output">{t.output}</label>
-        <textarea id="output" className="draft-editor" value={report?.output ?? ''} placeholder={t.outputPlaceholder} readOnly spellCheck={false} />
-        {report && <div className="export-row"><span>{t.downloadReview}</span><div><button onClick={() => download(report.output, 'rewrite.txt', 'text/plain;charset=utf-8')}>{t.exportTxt}</button><button onClick={exportReport}>{t.exportJson}</button></div></div>}
+        <textarea id="output" className="draft-editor" value={work.output} placeholder={t.outputPlaceholder} readOnly={!report} onChange={event => work.changeOutput(event.target.value)} spellCheck={false} />
+        {report && <>
+          <div className="manual-controls"><span>{work.manualRevision ? t.editedByUser : t.downloadReview}</span>{work.busy === 'check' ? <><span role="status">{t.checkingDraft}</span><button onClick={work.cancel}>{t.cancel}</button></> : <button disabled={!work.manualRevision || !work.output.trim() || !!work.busy} onClick={() => { onReview(); void work.recheckDraft(); }}>{t.recheckDraft}</button>}</div>
+          <div className="export-row"><span>{t.downloadReview}</span><div><button disabled={!work.output.trim()} onClick={() => download(work.output, 'rewrite.txt', 'text/plain;charset=utf-8')}>{t.exportTxt}</button><button onClick={exportReport}>{t.exportJson}</button></div></div>
+        </>}
       </div>
     </div>
     <div className="action-row">

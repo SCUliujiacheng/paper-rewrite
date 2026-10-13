@@ -20,7 +20,7 @@ async def test_socket_disconnect_cancels_upstream(endpoint):
     class WaitingModel:
         name = "cancellation-fixture"
 
-        async def complete(self, text, seed=0):
+        async def complete(self, text, seed=0, protected_terms=()):
             started.set()
             try:
                 await release.wait()

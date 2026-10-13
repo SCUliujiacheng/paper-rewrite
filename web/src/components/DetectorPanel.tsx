@@ -9,8 +9,8 @@ export function DetectorPanel({ work }: { work: Workbench }) {
     {!work.health?.detector_configured && <p className="muted">{t.detectorUnavailable}</p>}
     <label className="consent"><input type="checkbox" checked={work.consent} disabled={!!work.busy} onChange={event => work.setConsent(event.target.checked)} /><span>{t.consent}</span></label>
     <div className="detector-actions">
-      <button disabled={!work.report || !work.consent || !work.health?.detector_configured || !!work.busy} onClick={() => void work.detect()}>{t.runDetector}</button>
-      <button disabled={!work.report || !!work.busy} onClick={() => file.current?.click()}>{t.importReport}</button>
+      <button disabled={!work.report || !work.output.trim() || !work.consent || !work.health?.detector_configured || !!work.busy} onClick={() => void work.detect()}>{t.runDetector}</button>
+      <button disabled={!work.report || !work.output.trim() || !!work.busy} onClick={() => file.current?.click()}>{t.importReport}</button>
       <input ref={file} className="visually-hidden" type="file" accept=".json,application/json" aria-label={t.importReportFile} onChange={event => { void work.importDetector(event.target.files?.[0]); event.target.value = ''; }} />
       {(work.busy === 'detector' || work.busy === 'import') && <><span role="status">{t.detecting}</span><button onClick={work.cancel}>{t.cancel}</button></>}
     </div>
