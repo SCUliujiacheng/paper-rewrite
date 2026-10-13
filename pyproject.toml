@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paper-rewrite"
+version = "0.1.0"
+description = "Local academic draft rewriting with visible fidelity checks"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["fastapi>=0.118,<1", "httpx>=0.28,<1", "uvicorn>=0.37,<1", "pydantic>=2.11,<3"]
+
+[project.scripts]
+paper-rewrite = "paper_rewrite.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.4", "pytest-asyncio>=1.2", "ruff>=0.13", "pip-audit>=2.9"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/paper_rewrite"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
