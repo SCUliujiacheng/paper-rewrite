@@ -1,32 +1,32 @@
-# 改稿台
+# Paper Rewrite
 
-把 AI 初稿改得自然一些，也把改动摊开来检查。
+A local workbench for revising AI-assisted drafts and checking what changed.
 
-当前为实验性预览版。工作台和本地模型链路可以运行，输出仍有说明遗漏、语气变化和改动很少的问题，需要逐段修改与复核。已发现的问题和原始实验记录一并公开，不能作为直接投稿或通过检测的保证。
+This is an experimental preview. The workbench and local inference run end to end, but outputs can omit disclaimers, shift modality or make only minor edits. They need paragraph-by-paragraph review. Known failures and raw records are published alongside the code; this is not a guarantee of publication readiness or passing detection.
 
-写论文时，有些段落意思并不复杂，生成出来却绕了好几句。直接让模型重写，又容易把“可能”改成“证明”，或者顺手改掉一个数字。改稿台把这两件事放在一起：本地模型逐段改写，旁边保留原文、被拒绝的候选和检查记录。
+Rewriting a paragraph should not quietly change a measurement or turn a tentative conclusion into a firm claim. This project keeps the source next to the revision, checks concrete details, and shows rejected candidates instead of hiding them.
 
-[发布下载](https://github.com/SCUliujiacheng/paper-rewrite-zh/releases) · [启动说明](docs/downloads.md) · [安装模型](docs/model-setup.md) · [检测结果说明](docs/detectors.md) · [测试与限制](docs/evaluation.md) · [English](README.en.md)
+[Releases](https://github.com/SCUliujiacheng/paper-rewrite/releases) · [Start locally](docs/downloads.md) · [Model setup](docs/model-setup.en.md) · [Detector reports](docs/detectors.md) · [Evaluation and limits](docs/evaluation.md#english-summary) · [中文](README.md)
 
-## 可以做什么
+## What it does
 
-- 处理中文和英文的 TXT / Markdown，左右对照原稿和改写稿。
-- 指定不能改动的术语，检查数字、单位、引文、公式和网址。有检查项或风险提示的候选不会自动替换原文。
-- 直接修改右侧稿件，再点“重新核对”。模型原始记录不覆盖，人工修改单独保存到导出报告。
-- 保留标题、表格、代码和参考文献；导出文本及含候选记录的 JSON。
-- 单独比较检测结果。支持 GPTZero 官方 API 适配和已有报告导入，不把“未检测”显示成 0%。
+- Chinese and English TXT / Markdown input, side-by-side editing and review.
+- Verbatim terminology, numeric/unit and citation checks, formula and URL protection. Any issue, including a warning, withholds the candidate from automatic selection.
+- Edit the revision and run a fresh check. The export keeps the original model report separate from a `manual_revision` record.
+- Preserved headings, tables, code and reference sections. TXT and JSON exports include reviewable results.
+- Separate, opt-in detector comparisons through a GPTZero adapter or imported reports. “Not run” is never represented as a zero score.
 
-改写可使用已有的 [humanizer 专项模型](https://huggingface.co/jialinyyzz/humanizer) 或 [Qwen3.5-4B 通用指令模型](https://huggingface.co/Qwen/Qwen3.5-4B)，不是本项目从零训练的模型。这里实现的是工作台、逐段处理、内容检查和报告。Qwen 路径并非专项检测规避训练；上游归属见 [NOTICE](NOTICE)。
+Available local backends are the existing [humanizer model](https://huggingface.co/jialinyyzz/humanizer) and the general instruction model [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B). This project did not train those weights; it implements the workbench, orchestration, checks and reports. The Qwen path is not a detector-evasion fine-tune. See [NOTICE](NOTICE) for attribution.
 
-**目前没有商业检测平台的实测降分结果，也不承诺通过知网、维普、万方、Turnitin 或其他检测。** 规则检查同样不能证明语义完全一致；否定、因果、适用范围和引文内容仍要自己核对。使用时请遵守所在机构的 AI 使用与披露要求。
+**No commercial-detector score reduction has been measured for this project. It does not guarantee acceptance by any detector.** Rule checks also cannot prove semantic equivalence. Review claims, scope, negation and references yourself, and follow your institution's AI-use and disclosure rules.
 
-## 本地运行
+## Run locally
 
-如果下载 Release 中带前端的 ZIP，可以省去 Node.js 和前端构建步骤，见[下载说明](docs/downloads.md)。下面是从 Git 源码运行的方法。
+The release ZIP includes a prebuilt frontend and does not require Node.js. See [download instructions](docs/downloads.md). The steps below are for a Git checkout.
 
-需要 Python 3.12、[uv](https://docs.astral.sh/uv/getting-started/installation/) 和 Node.js 22.20 或更新的 22.x 版本。模型另行安装，需要数 GB 存储和足够的运行内存；完整步骤在[模型安装说明](docs/model-setup.md)。
+Install Python 3.12, [uv](https://docs.astral.sh/uv/getting-started/installation/), and Node.js 22.20 or a newer 22.x release. Install the model separately using [the setup guide](docs/model-setup.en.md); it needs several GB of storage and additional runtime memory.
 
-按安装说明启动本机 Qwen 模型服务，地址为 `http://127.0.0.1:8091`。再在仓库根目录运行：
+Start the local Qwen model at `http://127.0.0.1:8091` following the setup guide, then run from the repository root:
 
 ```sh
 uv sync --locked --python 3.12
@@ -35,31 +35,28 @@ npm --prefix web run build
 uv run paper-rewrite serve --backend qwen --open
 ```
 
-浏览器打开 `http://127.0.0.1:8765`。先用“载入示例”试一段，再导入自己的稿件。模型未连接时按钮不可用，界面会提示启动服务。
+Open `http://127.0.0.1:8765`. Try the built-in sample before importing your draft. The interface has Chinese and English controls; interface language and draft language are independent.
 
-每篇最多 12000 字符、60 段，每个正文段落最多 1000 字符。一次生成最多尝试 3 个候选，默认 2 个；选中首个没有检查项的改写后就停止，不会循环调用检测器刷分。规则比较保守，同义改写也可能需要人工核对。当前不支持直接读取 Word / PDF。
+Limits: 12000 characters per document, 60 paragraphs, 1000 characters per prose paragraph. Up to three candidates per paragraph; the default is two. The first changed candidate with no audit issues is selected. These rules are conservative and may also flag valid paraphrases. There is no automatic paid detector loop. Word and PDF import are not supported.
 
-## 命令行
+## CLI
 
 ```sh
-# 改写；已有文件不会被覆盖
-uv run paper-rewrite rewrite draft.txt -o revised.txt --report review.json --backend qwen --language zh --keep BM25
-
-# 不调用模型，只比较两个文件
+uv run paper-rewrite rewrite draft.txt -o revised.txt --report review.json --backend qwen --language en --keep BM25
 uv run paper-rewrite check draft.txt revised.txt --keep BM25
 ```
 
-`rewrite` 返回码：`0` 为所有可处理段落完成改写，`2` 为部分改写或保留原文，`3` 为模型失败，`1` 为输入或文件错误。**返回 0 也不代表可以直接投稿。** `check` 返回 2 表示发现必须核对的硬性差异。
+Existing output files are not overwritten. Rewrite exit codes: 0 completed, 2 partial or unchanged, 3 model failure, 1 input/file error. All outputs still require human review. `check` returns 2 for blocked differences.
 
-## 稿件会去哪里
+## Privacy and scope
 
-默认只在本机浏览器、本机服务和本机模型之间传递；应用不保存稿件，不加分析统计，也不会自动发送给检测平台。导出的文件由你保管。
+Drafts are processed between your browser, the local service and the local model. The app does not persist manuscripts, collect analytics or automatically upload text. Exports are saved at your request.
 
-只有配置 `GPTZERO_API_KEY`、勾选发送授权并点击“运行外部检测”后，原文和改写稿才会发给 GPTZero，可能收费。取消请求会终止后续处理，但已经发出的文本无法撤回。不要把密钥放进前端或提交到 Git。
+External comparison requires a server-side `GPTZERO_API_KEY`, explicit consent and a click. It sends both texts to GPTZero and may cost money. Cancellation stops further processing; it cannot recall text already sent. Never put credentials in frontend code or Git.
 
-应用仅面向个人本机使用，没有账号和多人访问隔离；不要把服务绑定公网，也不要直接当成团队 SaaS 部署。
+This is a single-user localhost application, not an authenticated multi-user service. Do not expose it to the internet.
 
-## 开发与复现
+## Development
 
 ```sh
 uv run pytest
@@ -68,10 +65,10 @@ npm --prefix web test
 npm --prefix web run build
 ```
 
-`data/smoke.jsonl` 包含 8 段中文、6 段英文精度压力样例；`data/prose.jsonl` 另有 6 段中文、4 段英文方法设计草稿。全部为项目编写的合成文本，不是真实论文，也不是未见测试集。运行方法、原始输出和失败说明见[测试与限制](docs/evaluation.md)。没有用单元测试通过数代替模型效果。
+The frozen smoke corpus contains eight Chinese and six English precision-stress passages. A supplementary prose set contains six Chinese and four English methodological proposals. Both sets are synthetic, not real papers or held-out generalization evidence. See [evaluation notes](docs/evaluation.md) for commands, raw outputs and failures. Passing software tests is not a model-quality result.
 
-代码按处理流程分为 `documents`、`model`、`guards`、`pipeline`、`detectors`；CLI 和网页共用同一套 Python 逻辑。前端在 `web/`，处理过程见[架构说明](docs/architecture.md)。中英文仓库共用代码与测试，仅首页和 `src/paper_rewrite/edition.json` 默认语言不同。发现具体漏检时，请用不含私人稿件的最小例子提 issue。
+The Python core separates document structure, model inference, detail checks, orchestration and detectors. CLI and UI use the same implementation; the React frontend lives in `web/`. The Chinese and English repositories share code and tests; only the landing README and the default in `src/paper_rewrite/edition.json` differ.
 
-## 许可
+## License
 
-本项目代码使用 Apache-2.0；合成测试语料采用 CC0-1.0。模型、运行时和第三方依赖各自适用其许可。项目许可不授予任何私人稿件、上游训练材料或投稿内容的使用权。
+Project code: Apache-2.0. Synthetic fixtures: CC0-1.0. Model weights, runtime and dependencies retain their own licenses. This does not grant rights to private manuscripts, upstream training materials or submitted academic work.
